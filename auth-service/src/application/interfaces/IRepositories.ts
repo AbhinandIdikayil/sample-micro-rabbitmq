@@ -1,6 +1,8 @@
-import { userEntity } from "../../domain/enitities";
+import { userEntity, userLoginEntity } from "../../domain/entities";
+
 
 
 export interface IRepositories {
-    loginUser:(data:userEntity) => Promise<userEntity | null>;
+    signupUser:(data:userEntity) => Promise<userEntity  | null>,
+    loginUser:(data:userLoginEntity) => Promise<userLoginEntity | null> 
 }

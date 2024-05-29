@@ -1,7 +1,8 @@
-import {IRepositories} from './IRepositories'
-import { IUseCases } from './IUseCases'
+import { IRepositories } from "./IRepositories";
+import { IUsecases } from "./IUsecases";
 
-export interface IDependencies  {
-    respositories:IRepositories,
-    usecases:IUseCases
+
+export  interface IDependencies {
+    repositories:IRepositories,
+    usecases:IUsecases
 }

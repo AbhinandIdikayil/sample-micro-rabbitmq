@@ -7,3 +7,8 @@ export interface userEntity {
     email:string,
     password:string
 }
+
+export interface userLoginEntity {
+    email: string,
+    password: string,
+}

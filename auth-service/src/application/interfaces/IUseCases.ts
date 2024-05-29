@@ -1,7 +1,9 @@
-import { ILoginUserUseCase } from "../../domain/useCaseInterface";
+import { ILoginUserUseCase, IUserSignupUserUseCase } from "../../domain/usecases";
 import { IDependencies } from "./IDependencies";
 
 
-export interface IUseCases  {
-    loginUserCase:(dependencies:IDependencies) => ILoginUserUseCase
+
+export interface IUsecases {
+    signupUserUseCase:(dependencies:IDependencies) => IUserSignupUserUseCase
+    loginUserUseCase:(dependencies:IDependencies) => ILoginUserUseCase
 }
