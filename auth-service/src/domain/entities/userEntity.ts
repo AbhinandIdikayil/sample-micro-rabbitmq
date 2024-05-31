@@ -10,5 +10,6 @@ export interface userEntity {
 
 export interface userLoginEntity {
     email: string,
-    password: string,
+    password?: string,
+    token?:string
 }

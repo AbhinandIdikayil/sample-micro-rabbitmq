@@ -1,6 +1,6 @@
-import { userLoginEntity } from "../entities";
+import { userEntity, userLoginEntity } from "../entities";
 
 
 export interface ILoginUserUseCase {
-    execute(data:userLoginEntity): Promise<userLoginEntity | null>
+    execute(data:userLoginEntity): Promise<userEntity | null>
 }

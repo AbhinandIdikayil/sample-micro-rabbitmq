@@ -8,3 +8,7 @@ export interface productEntity {
     stock:number,
     price:number,
 }
+
+export interface buyProductEntity {
+    _id:ObjectId,
+}
