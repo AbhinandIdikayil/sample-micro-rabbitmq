@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { IDependencies } from "../../application/interfaces/IDependencies";
 
 
+
 export const addProductController = (dependencies: IDependencies) => {
     const { usecases: { addProductUseCase } } = dependencies
     return async (req: Request, res: Response) => {

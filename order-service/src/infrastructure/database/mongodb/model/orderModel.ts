@@ -21,8 +21,8 @@ const orderSchema = new Schema({
             required: true,
         },
     }],
-    userId: { type: String, required: true },
-    totalPrice: { type: String, required: true}
+    userId: { type: String, },
+    totalPrice: { type: Number}
 })
 
 export const orderModel = mongoose.model<orderEntity>('order',orderSchema)

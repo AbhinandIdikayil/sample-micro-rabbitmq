@@ -3,13 +3,13 @@ import { IDependencies } from "../interfaces/IDependencies"
 
 
 
-export const buyProductUseCase = (dependencies:IDependencies) => {
-const { repositories:{buyProduct} } = dependencies
+export const buyProductUseCase = (dependencies: IDependencies) => {
+    const { repositories: { buyProduct } } = dependencies
     return {
-        execute: async (data:buyProductEntity) => {
+        execute: async (data: buyProductEntity) => {
             try {
                 return await buyProduct(data)
-            } catch (error:any) {
+            } catch (error: any) {
                 console.log(error)
                 throw new Error(error)
             }

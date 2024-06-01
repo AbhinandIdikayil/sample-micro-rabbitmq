@@ -9,6 +9,6 @@ export interface orderEntity {
         desc:string,
         price:string
     }>;
-    userId: string,
-    totalprice: Number,
+    userId?: string,
+    totalprice?: Number,
 }

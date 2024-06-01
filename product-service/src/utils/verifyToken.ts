@@ -1,11 +1,15 @@
 import { NextFunction, Request, Response } from "express"
 import jwt from 'jsonwebtoken'
 interface authenticatedRequest extends Request {
-    user:any
+    user?:any
 }
 
-export const verifyToken = (req:authenticatedRequest ,res:Response , next:NextFunction) => {
-    const token = req.cookies.userJWT
+export const verifyToken = async (req:authenticatedRequest ,res:Response , next:NextFunction) => {
+    console.log(req.headers.cookie)
+
+    const token = (Array.isArray(req.headers.cookies) ? req.headers.cookies[0] : req.headers.cookies)
+    console.log(token)
+    // (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]) || null;
     if(token) {
         try {
             jwt.verify(token,'SECRET',(err:unknown,decoded:unknown) => {
@@ -17,7 +21,9 @@ export const verifyToken = (req:authenticatedRequest ,res:Response , next:NextFu
                     console.log(id)
                     req.user = decoded
                     next();
-                }
+                } else {
+                    res.status(400).json('error')
+                }  
             })
         } catch (error) {
             console.log(error)

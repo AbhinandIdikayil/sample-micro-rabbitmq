@@ -10,5 +10,6 @@ export interface productEntity {
 }
 
 export interface buyProductEntity {
-    _id:ObjectId,
+    userId:ObjectId,
+    id:ObjectId,
 }
