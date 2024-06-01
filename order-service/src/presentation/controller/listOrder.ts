@@ -3,11 +3,16 @@ import { IDependencies } from "../../application/interfaces/IDependencies";
 import { orderEntity } from "../../domain/enitities";
 
 
+interface authenticatedRequest extends Request {
+  user?:any
+}
+
 export const listOrderController = (dependencies: IDependencies) => {
   const { usecases: { listOrderUseCase } } = dependencies
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: authenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const orders: orderEntity[] | null = await listOrderUseCase(dependencies).execute()
+      const {id} = req.user
+      const orders: orderEntity[] | null = await listOrderUseCase(dependencies).execute(id)
       if (orders !== null) {
         if (orders.length > 0) {
           res.status(200).json(orders)

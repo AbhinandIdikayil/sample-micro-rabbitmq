@@ -3,5 +3,5 @@ import { orderEntity } from "../enitities";
 
 
 export interface IListOrderUseCase {
-    execute(): Promise<orderEntity[] | any>
+    execute(id:string): Promise<orderEntity[] | any>
 }

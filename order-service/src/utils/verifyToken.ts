@@ -1,11 +1,14 @@
 import { NextFunction, Request, Response } from "express"
 import jwt from 'jsonwebtoken'
 interface authenticatedRequest extends Request {
-    user:any
+    user?:any
 }
 
 export const verifyToken = (req:authenticatedRequest ,res:Response , next:NextFunction) => {
-    const token = req.cookies.userJWT
+    console.log(req.headers.cookies)
+
+    const token = (Array.isArray(req.headers.cookies) ? req.headers.cookies[0] : req.headers.cookies)
+    console.log(token)
     if(token) {
         try {
             jwt.verify(token,'SECRET',(err:unknown,decoded:unknown) => {

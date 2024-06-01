@@ -15,8 +15,8 @@ export const rabbitmqController = () => {
                 return channel;
             } catch (error: unknown) {
                 console.error("Error connecting to RabbitMQ:", error);
-            }   
-        };   
+            }
+        };
 
         interface Item {
             price: number
@@ -40,7 +40,7 @@ export const rabbitmqController = () => {
                                 if (message) {
                                     let isOrder = await orderModel.findOne({ userId: message.userId })
                                     if (isOrder) {
-                                        console.log(isOrder);  
+                                        console.log(isOrder);
                                     } else {
                                         // let totalPrice = calculateSum(message.details)
                                         const order = await orderModel.create({
@@ -50,18 +50,18 @@ export const rabbitmqController = () => {
                                                     name: message.details.name,
                                                     desc: message.details.desc,
                                                     price: message.details.price
-                                                }   
-                                            ],   
-                                            totalPrice:parseInt(message.details.price),
-                                            userId:message.userId
-                                        })  
+                                                }
+                                            ],
+                                            totalPrice: parseInt(message.details.price),
+                                            userId: message.userId
+                                        })
                                         channel.sendToQueue('BUYED-PRODUCT', Buffer.from(JSON.stringify(order)))
                                     }
                                 }
-                                channel.ack(msg); 
+                                channel.ack(msg);
                             }
                         }
-                    )    
+                    )
                 } else {
                     console.log('out')
                 }
