@@ -4,6 +4,7 @@ import server from './presentation/server'
 
 const startServer = async() => {
     try {
+        // startnig server
         server;
         await connectDB()
     } catch (error) {
