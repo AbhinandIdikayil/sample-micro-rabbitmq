@@ -1,11 +1,29 @@
 import { Request, Response } from "express";
 import { IDependencies } from "../../application/interfaces/IDependencies";
 import amqp from 'amqplib'
-
+import CircuitBreaker from 'opossum'
 
 interface authenticatedRequest extends Request {
     user?: any
 }
+
+const circuitBreakerOptions = {
+    timeout: 3000,
+    errorThresholdPercentage: 50,
+    resetTimeout: 30000
+};
+
+const orderRequestBreaker = new CircuitBreaker(sendToRabbitmq, circuitBreakerOptions)
+
+
+orderRequestBreaker.fallback(() => {
+    return { status: 'fallback', message: 'Order service is unavailable, please try again later.' };
+});
+
+orderRequestBreaker.on('open', () => console.log('Circuit Breaker opened'));
+orderRequestBreaker.on('close', () => console.log('Circuit Breaker closed'));
+orderRequestBreaker.on('halfOpen', () => console.log('Circuit Breaker half-open'));
+
 
 const connectToRabbitMQ = async () => {
     try {
@@ -18,51 +36,68 @@ const connectToRabbitMQ = async () => {
     } catch (error: unknown) {
         console.error("Error connecting to RabbitMQ:", error);
     }
-}; 
+};
+
+
+async function sendToRabbitmq<T>(data: T) {
+    console.log(data)
+    try {
+        const channel: amqp.Channel | undefined = await connectToRabbitMQ()
+        if (channel) {
+            channel.sendToQueue('ORDER', Buffer.from(JSON.stringify(data)));
+            console.log('--- data send to order queue ---')
+
+
+            return new Promise(async(res, rej) => {
+                const timeout = setTimeout(() => {
+                    rej(new Error('Timeout waiting for response'))
+                }, 1000);
+
+
+                // and consuming the queue from the order service
+                channel.consume('BUYED-PRODUCT',
+                    async (msg: amqp.ConsumeMessage | null) => {
+                        if (msg != null) {
+                            const message = JSON.parse(msg.content.toString())
+                            if (message) {
+                                channel.ack(msg);
+                                clearTimeout(timeout);
+                                res(message)
+                            }
+                        }
+                    },
+                    {noAck:false}
+                )
+            })
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 
 export const buyProductController = (dependencies: IDependencies) => {
     const { usecases: { buyProductUseCase } } = dependencies
     return async (req: authenticatedRequest, res: Response) => {
         try {
             const body = req.body
-            const {id} = req.user
+            const { id } = req.user
             let data = {
                 ...body,
-                userId:id
+                userId: id
             }
             let product = await buyProductUseCase(dependencies).execute(data)
 
-            const sendToRabbitmq = async<T>(data:T) => {
-                console.log(data)
-                try {
-                    const channel:amqp.Channel | undefined = await connectToRabbitMQ()
-                    if(channel) {
-                        channel.sendToQueue('ORDER', Buffer.from(JSON.stringify(data)));
-                        console.log('--- data send to order queue ---')
+            
+            const result = await orderRequestBreaker.fire(product)
+            console.log(result, "abhinand")
+            res.json(result)
 
-                        // and consuming the queue from the order service
-                        await channel.consume('BUYED-PRODUCT',
-                        async (msg:amqp.ConsumeMessage | null) => {
-                            if(msg != null) {
-                                const message =JSON.parse(msg.content.toString())
-                                if(message){
-                                    res.status(200).json(message)
-                                }  
-                                channel.ack(msg);
-                            }
-                        }
-                        )   
-                    }    
-                } catch (error) {  
-                    console.log(error)
-                }
-            }
-
-            sendToRabbitmq(product)
             return product
         } catch (error: any) {
             console.log(error)
-            throw new Error(error) 
+            res.status(500).json({ error: error.message })
+            throw new Error(error)
         }
     }
 } 
