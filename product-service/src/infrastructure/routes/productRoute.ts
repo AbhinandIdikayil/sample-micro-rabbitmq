@@ -8,9 +8,9 @@ export const productRoute = (dependencies:IDependencies) => {
     const {addProduct , buyProduct} = controller(dependencies)
 
     
-    router.post('/addproduct', addProduct)
+    router.post('/add', addProduct)
 
-    router.post('/buyproduct',verifyToken , buyProduct)
+    router.post('/buy',verifyToken , buyProduct)
 
     // router.route('/addproduct').post()
 

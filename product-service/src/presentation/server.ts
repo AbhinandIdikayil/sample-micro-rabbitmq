@@ -10,7 +10,7 @@ app.use(express.urlencoded({extended:true}));
 
 const port = PORT || 4000
 
-app.use(productRoute(dependencies))
+app.use('/product',productRoute(dependencies))
 
 app.listen(port , () => {
     console.log(`product service is running on ${PORT}`)

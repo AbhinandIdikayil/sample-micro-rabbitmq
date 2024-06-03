@@ -6,7 +6,7 @@ export const orderRoute = (dependencies:IDependencies) => {
     const router = Router()
     const {listOrder } = controller(dependencies)
 
-    router.route('/list-order').get(verifyToken , listOrder)
+    router.route('/list').get(verifyToken , listOrder)
 
     return router
 } 

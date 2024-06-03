@@ -10,7 +10,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}));
 
 rabbitmqController()
-app.use(orderRoute(dependencies))
+app.use('/order',orderRoute(dependencies))
 
 const PORT = port || 5000
 
