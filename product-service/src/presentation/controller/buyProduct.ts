@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { IDependencies } from "../../application/interfaces/IDependencies";
-import amqp from 'amqplib'
+import amqp, { Channel, Connection } from 'amqplib'
 import CircuitBreaker from 'opossum'
+import { promises } from "dns";
 
 interface authenticatedRequest extends Request {
     user?: any
@@ -27,49 +28,76 @@ orderRequestBreaker.on('fire', () => console.log('Attempting to fire through Cir
 
 
 
-const connectToRabbitMQ = async () => {
+const connectToRabbitMQ = async (): Promise<{ channel: Channel, connection: Connection } | undefined> => {
     try {
-        const connection: amqp.Connection = await amqp.connect(
+        const connection: Connection = await amqp.connect(
             'amqp://localhost:5672'
         );
-        const channel: amqp.Channel = await connection.createChannel();
+        const channel: Channel = await connection.createChannel();
         await channel.assertQueue("BUYED-PRODUCT");
-        return channel;
+        return { channel, connection };
     } catch (error: unknown) {
-        console.error("Error connecting to RabbitMQ:", error);
+        console.log("Error connecting to RabbitMQ:", error);
+        return undefined
     }
 };
+
+// async function closeChannel(channel: amqp.Channel | any, connection: Connection | any) {
+//     try {
+//         console.log("Closing RabbitMQ channel...");
+//         await channel.close();
+//         console.log("RabbitMQ channel closed.");
+//     } catch (error) {
+//         console.error("Error closing RabbitMQ channel:", error);
+//     }
+//     try {
+//         console.log("Closing RabbitMQ connection...");
+//         await connection.close();
+//         console.log("RabbitMQ connection closed.");
+//     } catch (error) {
+//         console.error("Error closing RabbitMQ connection:", error);
+//     }
+// }
 
 
 async function sendToRabbitmq<T>(data: T) {
     console.log(data)
+    const rabbitMQConnection = await connectToRabbitMQ();
+    if(!rabbitMQConnection){
+        console.log('failed to connect rabbitmq')
+        return 
+    }
+    const {channel , connection} = rabbitMQConnection
+
     try {
-        const channel: amqp.Channel | undefined = await connectToRabbitMQ()
         if (channel) {
             channel.sendToQueue('ORDER', Buffer.from(JSON.stringify(data)));
             console.log('--- data send to order queue ---')
 
 
             return new Promise((res, rej) => {
-                // const timeout = setTimeout(() => {
-                //     rej(new Error('Timeout waiting for response'))
-                // }, 15000);
+                const timeout = setTimeout(() => {
+                    rej(new Error('Timeout waiting for response'))
+                }, 15000);
 
- 
+
                 // and consuming the queue from the order service
                 channel.consume('BUYED-PRODUCT',
                     async (msg: amqp.ConsumeMessage | null) => {
                         if (msg != null) {
                             const message = JSON.parse(msg.content.toString())
                             if (message) {
-                                res(message) 
-                                // clearTimeout(timeout);
+                                res(message)
+                                clearTimeout(timeout);
+                                channel.ack(msg);
+                                setTimeout(() => {
+                                    channel.close();
+                                }, 500)
                                 console.log(message, '----- message from BUYED-PRODUCT  QUEUE -----')
                             }
-                             channel.ack(msg);
                         }
                     },
-                    {noAck:false}
+                    { noAck: false }
                 )
             })
         }
@@ -77,6 +105,10 @@ async function sendToRabbitmq<T>(data: T) {
         console.log(error)
     }
 }
+
+
+
+
 
 
 export const buyProductController = (dependencies: IDependencies) => {
@@ -91,7 +123,7 @@ export const buyProductController = (dependencies: IDependencies) => {
             }
             let product = await buyProductUseCase(dependencies).execute(data)
 
-            
+
             const result = await orderRequestBreaker.fire(product)
             console.log(result, "----response from the qeueu -----")
             res.json(result)
