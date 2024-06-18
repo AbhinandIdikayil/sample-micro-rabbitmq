@@ -6,11 +6,12 @@ export const buyProduct = async (data:buyProductEntity): Promise<object | null> 
     try {
         const {id  , userId} = data;
         let product = await productModel.findById(id) 
+        console.log(product)
         if(product){
             product.stock -= 1 
             let details = {
                 id:product._id,
-                name:product?.name,
+                name:product?.name,  
                 desc:product?.desc,
                 price:product?.price
             } 

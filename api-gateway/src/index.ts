@@ -11,14 +11,14 @@ app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 
-const authProxy = proxy(`http:localhost:3000`)
+const authProxy = proxy(`http:localhost:3000`);
 const productProxy = proxy(`http:localhost:4000`)
-const orderProxy = proxy(`http:localhost:5000`)
+const orderProxy = proxy(`http:localhost:5000`);
 
 app.use('/auth',authProxy)
 app.use('/product',productProxy)
 app.use('/order',orderProxy)
 
 app.listen(PORT ,() => {
-    console.log(`gateway is listening to  ${PORT}`)
-})
+    console.log(`gateway is listening to  ${PORT}`);
+});

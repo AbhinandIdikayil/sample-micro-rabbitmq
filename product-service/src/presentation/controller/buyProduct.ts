@@ -8,9 +8,9 @@ interface authenticatedRequest extends Request {
 }
 
 const circuitBreakerOptions = {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000
+    timeout: 15000,
+    errorThresholdPercentage: 80,
+    resetTimeout: 10000
 };
 
 const orderRequestBreaker = new CircuitBreaker(sendToRabbitmq, circuitBreakerOptions)
@@ -23,6 +23,8 @@ orderRequestBreaker.fallback(() => {
 orderRequestBreaker.on('open', () => console.log('Circuit Breaker opened'));
 orderRequestBreaker.on('close', () => console.log('Circuit Breaker closed'));
 orderRequestBreaker.on('halfOpen', () => console.log('Circuit Breaker half-open'));
+orderRequestBreaker.on('fire', () => console.log('Attempting to fire through Circuit Breaker'));
+
 
 
 const connectToRabbitMQ = async () => {
@@ -48,22 +50,23 @@ async function sendToRabbitmq<T>(data: T) {
             console.log('--- data send to order queue ---')
 
 
-            return new Promise(async(res, rej) => {
-                const timeout = setTimeout(() => {
-                    rej(new Error('Timeout waiting for response'))
-                }, 1000);
+            return new Promise((res, rej) => {
+                // const timeout = setTimeout(() => {
+                //     rej(new Error('Timeout waiting for response'))
+                // }, 15000);
 
-
+ 
                 // and consuming the queue from the order service
                 channel.consume('BUYED-PRODUCT',
                     async (msg: amqp.ConsumeMessage | null) => {
                         if (msg != null) {
                             const message = JSON.parse(msg.content.toString())
                             if (message) {
-                                channel.ack(msg);
-                                clearTimeout(timeout);
-                                res(message)
+                                res(message) 
+                                // clearTimeout(timeout);
+                                console.log(message, '----- message from BUYED-PRODUCT  QUEUE -----')
                             }
+                             channel.ack(msg);
                         }
                     },
                     {noAck:false}
@@ -90,7 +93,7 @@ export const buyProductController = (dependencies: IDependencies) => {
 
             
             const result = await orderRequestBreaker.fire(product)
-            console.log(result, "abhinand")
+            console.log(result, "----response from the qeueu -----")
             res.json(result)
 
             return product

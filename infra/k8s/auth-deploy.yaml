@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: abhinandidikayil/auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-clusip-srv
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - name: auth-service
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

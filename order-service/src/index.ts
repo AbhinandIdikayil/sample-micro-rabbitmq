@@ -5,12 +5,12 @@ import server from './presentation/server'
 const startServer = async() => {
     try {
         // startnig server
-        server;
+        server; 
         await connectDB()
     } catch (error) {
-        console.log(error);
-        process.exit(1)
+        console.log(error); 
+        process.exit(1) 
     }
 }
 
-startServer()
+startServer();

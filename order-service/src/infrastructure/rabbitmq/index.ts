@@ -22,25 +22,52 @@ export const rabbitmqController = () => {
             price: number
         }
 
+
+
         function calculateSum(arr: Array<Item>): number {
             let total = arr.reduce((sum, item) => sum + item.price, 0)
             return total
         }
 
 
+        
+
         const useMQ = async () => {
             try {
                 const channel: amqp.Channel | undefined = await connectToRabbitMQ()
                 if (channel) {
-                    await channel.consume('ORDER',
+                    channel.consume('ORDER',
                         async (msg: amqp.ConsumeMessage | null) => {
                             if (msg != null) {
                                 const message = JSON.parse(msg.content.toString())
-                                console.log(message)
+                                console.log(message, '---- message from queue ---')
                                 if (message) {
                                     let isOrder = await orderModel.findOne({ userId: message.userId })
                                     if (isOrder) {
-                                        console.log(isOrder);
+                                        let price = Number(isOrder?.totalPrice);
+                                        console.log(price, '---- total price key ---');
+                                        let order = await orderModel.findOneAndUpdate(
+                                            { userId: message.userId },
+                                            {
+                                                $push: {
+                                                    'orders': {
+                                                        productId: message.details.id,
+                                                        name: message.details.name,
+                                                        desc: message.details.desc,
+                                                        price: message.details.price
+                                                    }
+                                                },
+                                                $inc: { totalPrice: price }
+                                            },
+                                            {
+                                                new: true
+                                            }
+                                        )
+                                        if (order) {
+                                            console.log(order, '----- from order if condition -----')
+                                            channel.sendToQueue('BUYED-PRODUCT', Buffer.from(JSON.stringify(order)));
+                                            return
+                                        }
                                     } else {
                                         // let totalPrice = calculateSum(message.details)
                                         const order = await orderModel.create({
@@ -60,6 +87,9 @@ export const rabbitmqController = () => {
                                 }
                                 channel.ack(msg);
                             }
+                        },
+                        {
+                            noAck: false
                         }
                     )
                 } else {

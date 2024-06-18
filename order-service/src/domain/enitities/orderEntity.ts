@@ -10,5 +10,5 @@ export interface orderEntity {
         price:string
     }>;
     userId?: string,
-    totalprice?: Number,
+    totalPrice?: Number,
 }
