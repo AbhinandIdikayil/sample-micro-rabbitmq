@@ -30,7 +30,7 @@ export const rabbitmqController = () => {
         }
 
 
-        
+          
 
         const useMQ = async () => {
             try {

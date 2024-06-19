@@ -51,25 +51,28 @@ async function sendToRabbitmq<T>(data: T) {
 
 
             return new Promise((res, rej) => {
-                // const timeout = setTimeout(() => {
-                //     rej(new Error('Timeout waiting for response'))
-                // }, 15000);
+                const timeout = setTimeout(() => {
+                    rej(new Error('Timeout waiting for response'))
+                }, 15000);
 
- 
+
                 // and consuming the queue from the order service
                 channel.consume('BUYED-PRODUCT',
                     async (msg: amqp.ConsumeMessage | null) => {
                         if (msg != null) {
                             const message = JSON.parse(msg.content.toString())
                             if (message) {
-                                res(message) 
-                                // clearTimeout(timeout);
+                                res(message)
+                                clearTimeout(timeout);
+                                channel.ack(msg);
+                                setTimeout(() => {
+                                    channel.close()
+                                }, 500);
                                 console.log(message, '----- message from BUYED-PRODUCT  QUEUE -----')
                             }
-                             channel.ack(msg);
                         }
                     },
-                    {noAck:false}
+                    { noAck: false }
                 )
             })
         }
@@ -91,7 +94,7 @@ export const buyProductController = (dependencies: IDependencies) => {
             }
             let product = await buyProductUseCase(dependencies).execute(data)
 
-            
+
             const result = await orderRequestBreaker.fire(product)
             console.log(result, "----response from the qeueu -----")
             res.json(result)
