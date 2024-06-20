@@ -44,8 +44,7 @@ export const rabbitmqController = () => {
                                 if (message) {
                                     let isOrder = await orderModel.findOne({ userId: message.userId })
                                     if (isOrder) {
-                                        let price = Number(isOrder?.totalPrice);
-                                        console.log(price, '---- total price key ---');
+                                        
                                         let order = await orderModel.findOneAndUpdate(
                                             { userId: message.userId },
                                             {
@@ -57,7 +56,7 @@ export const rabbitmqController = () => {
                                                         price: message.details.price
                                                     }
                                                 },
-                                                $inc: { totalPrice: price }
+                                                $inc: { totalPrice:  message.details.price }
                                             },
                                             {
                                                 new: true
@@ -66,7 +65,6 @@ export const rabbitmqController = () => {
                                         if (order) {
                                             console.log(order, '----- from order if condition -----')
                                             channel.sendToQueue('BUYED-PRODUCT', Buffer.from(JSON.stringify(order)));
-                                            return
                                         }
                                     } else {
                                         // let totalPrice = calculateSum(message.details)
@@ -88,7 +86,7 @@ export const rabbitmqController = () => {
                                 channel.ack(msg);
                             }
                         },
-                        {
+                        { 
                             noAck: false
                         }
                     )
