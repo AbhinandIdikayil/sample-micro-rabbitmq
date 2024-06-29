@@ -92,9 +92,12 @@ export const buyProductController = (dependencies: IDependencies) => {
                 ...body,
                 userId: id
             }
-            let product = await buyProductUseCase(dependencies).execute(data)
+            let product:any = await buyProductUseCase(dependencies).execute(data)
 
-
+            console.log(product)
+            if (product.message) {
+                return res.json(product.message)
+            }
             const result = await orderRequestBreaker.fire(product)
             console.log(result, "----response from the qeueu -----")
             res.json(result)
