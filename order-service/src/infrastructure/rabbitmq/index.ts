@@ -135,7 +135,7 @@ export const rabbitmqController = () => {
                         console.log('Received SIGINT, shutting down...');
                         await closeChannel(channel, connection);
                         process.exit(0);
-                    });
+                    }); 
 
                     process.on('SIGTERM', async () => {
                         console.log('Received SIGTERM, shutting down...');

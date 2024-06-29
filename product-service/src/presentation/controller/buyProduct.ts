@@ -63,11 +63,11 @@ const connectToRabbitMQ = async (): Promise<{ channel: Channel, connection: Conn
 async function sendToRabbitmq<T>(data: T) {
     console.log(data)
     const rabbitMQConnection = await connectToRabbitMQ();
-    if(!rabbitMQConnection){
+    if (!rabbitMQConnection) {
         console.log('failed to connect rabbitmq')
-        return 
+        return
     }
-    const {channel , connection} = rabbitMQConnection
+    const { channel, connection } = rabbitMQConnection
 
     try {
         if (channel) {
@@ -90,6 +90,20 @@ async function sendToRabbitmq<T>(data: T) {
                                 res(message)
                                 clearTimeout(timeout);
                                 channel.ack(msg);
+
+
+                                process.on('SIGINT',  () => {
+                                    console.log('Received SIGINT, shutting down...');
+                                    channel.close()
+                                    process.exit(0);
+                                });
+
+                                process.on('SIGTERM',  () => {
+                                    console.log('Received SIGTERM, shutting down...');
+                                    channel.close()
+                                    process.exit(0);
+                                });
+
                                 setTimeout(() => {
                                     channel.close();
                                 }, 500)
